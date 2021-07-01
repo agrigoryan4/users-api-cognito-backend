@@ -1,0 +1,22 @@
+{
+  "name": "users-api-cognito",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/armanDark/users-api-cognito.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/armanDark/users-api-cognito/issues"
+  },
+  "homepage": "https://github.com/armanDark/users-api-cognito#readme",
+  "dependencies": {
+    "serverless-offline": "^7.0.0"
+  }
+}

@@ -1,0 +1,83 @@
+plugins:
+  - serverless-offline
+service: users-cognito
+frameworkVersion: "2"
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: dev
+  region: us-east-1
+  apiGateway:
+    restApiId: !Ref UsersCognitoRestApi
+    restApiRootResourceId: !GetAtt UsersCognitoRestApi.RootResourceId
+resources:
+  Resources:
+#    ApiGateway
+    UsersCognitoRestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ${self:service}-rest-api-${opt:stage, self:provider.stage}
+    ApiGatewayAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        Name: ${self:service}-rest-api-authorizer
+        IdentitySource: method.request.header.Authorization
+        RestApiId: !Ref UsersCognitoRestApi
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - !GetAtt UsersCognitoUserPool.Arn
+#    Cognito
+    UsersCognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-user-pool-${opt:stage, self:provider.stage}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Schema:
+          - AttributeDataType: String
+            Name: favourite_animal
+    UsersCognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-user-pool-client-${opt:stage, self:provider.stage}
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - email
+          - openid
+          - profile
+          - aws.cognito.signin.user.admin
+        UserPoolId:
+          Ref: UsersCognitoUserPool
+        CallbackURLs:
+          - https://localhost:3000
+        ExplicitAuthFlows:
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_USER_SRP_AUTH
+        GenerateSecret: false
+        SupportedIdentityProviders:
+          - COGNITO
+  Outputs:
+    CognitoUserPoolId:
+      Description: The id of the Cognito User Pool
+      Value: !Ref UsersCognitoUserPool
+      Export:
+        Name: ${self:service}-cognito-user-pool-id-${opt:stage, self:provider.stage}
+    CognitoUserPoolClientId:
+      Description: Cognito User Pool client app id
+      Value: !Ref UsersCognitoUserPoolClient
+      Export:
+        Name: ${self:service}-cognito-user-pool-client-id-${opt:stage, self:provider.stage}
+functions:
+  sampleLambda:
+    handler: api/lambdas/sample.handler
+    events:
+      - http:
+          method: GET
+          path: /users/sample
+          authorizer:
+            type: COGNITO_USER_POOLS
+            authorizerId: !Ref ApiGatewayAuthorizer
