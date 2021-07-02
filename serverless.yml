@@ -31,11 +31,15 @@ resources:
       Type: AWS::Cognito::UserPool
       Properties:
         UserPoolName: ${self:service}-user-pool-${opt:stage, self:provider.stage}
-        UsernameAttributes:
-          - email
         AutoVerifiedAttributes:
           - email
+        UsernameAttributes:
+          - email
         Schema:
+          - AttributeDataType: String
+            Name: email
+            Mutable: false
+            Required: true
           - AttributeDataType: String
             Name: favourite_animal
     UsersCognitoUserPoolClient:
